@@ -14,6 +14,7 @@ import sys
 import os
 import re
 import codecs
+import six
 
 from lxml import etree as ET
 
@@ -98,7 +99,7 @@ def is_standard_element(e):
     """Return whether given element is a normal element as opposed to a
     special like a comment, a processing instruction, or an entity."""
     try:
-        return isinstance(e.tag, basestring)
+        return isinstance(e.tag, six.string_types)
     except:
         return False
 
@@ -260,7 +261,7 @@ def strip_elements(root, elements_to_strip=set(), text=None, standoffs=None):
                     # comments and processing instructions, it's possible to
                     # have double deletes. These should be rare and harmless.
                     assert rewritten[o] is None, 'internal error'
-                    print >> sys.stderr, 'Note: dup remove at %d' % o
+                    sys.stderr.write('Note: dup remove at %d\n' % o)
             e.text = end
 
         # element-final space is in e.text only if the element has no
@@ -284,7 +285,7 @@ def strip_elements(root, elements_to_strip=set(), text=None, standoffs=None):
                         # instructions, it's possible to have double
                         # deletes. These should be rare and harmless.
                         assert rewritten[o] is None, 'internal error'
-                        print >> sys.stderr, "Note: dup remove at %d" % o
+                        sys.stderr.write("Note: dup remove at %d\n" % o)
                 e.text = start
                     
         else:
@@ -362,7 +363,7 @@ def read_tree(filename):
     try:
         return ET.parse(filename)
     except Exception:
-        print >> sys.stderr, "Error parsing %s" % fn
+        sys.stderr.write("Error parsing %s\n" % filename)
         raise ParseError
 
 def process_tree(tree, options=None):
@@ -519,14 +520,14 @@ def write_tree(tree, treefn, options=None):
 
     # TODO: better protection against clobbering.
     if output_fn == treefn and (not options or not options.overwrite):
-        print >> sys.stderr, 'respace: skipping output for %s: file would overwrite input (consider -d and -o options)' % treefn
+        sys.stderr.write('respace: skipping output for %s: file would overwrite input (consider -d and -o options)\n' % treefn)
     else:
         # OK to write output_fn
         try:
             with open(output_fn, 'w') as of:
                 tree.write(of, encoding=OUTPUT_ENCODING)
-        except IOError, ex:
-            print >> sys.stderr, 'respace: failed write: %s' % ex
+        except IOError as ex:
+            sys.stderr.write('respace: failed write: %s\n' % ex)
                 
     return True
 

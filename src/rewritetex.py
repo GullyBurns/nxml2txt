@@ -34,7 +34,10 @@ ORIG_TEXT_ATTRIBUTE = 'orig-text'
 TEX_COMMAND = 'latex -interaction=nonstopmode'
 
 # directory into which to instruct tex to place its output.
-TEX_OUTPUTDIR = '/tmp'
+if os.environ.get('TMPDIR'):
+    TEX_OUTPUTDIR = os.environ['TMPDIR']
+else:
+    TEX_OUTPUTDIR = '/tmp'
 
 # command for invokind catdvi (-e 0 specifies output encoding in UTF-8,
 # and -s sets sequential mode, which turns off attempt to reproduce
@@ -119,7 +122,7 @@ def unordall(d):
     from copy import deepcopy
     d = deepcopy(d)
     for k in d.keys():
-        d[k] = "".join([unichr(c) for c in d[k]])
+        d[k] = "".join([chr(c) for c in d[k]])
     return d
 
 class Cache(object):
@@ -140,33 +143,33 @@ class PickleCache(Cache):
         super(PickleCache, self).__init__(map)
 
     def save(self, filename=PICKLE_CACHE_PATH):
-        from cPickle import UnpicklingError
-        from cPickle import dump as pickle_dump
+        from pickle import UnpicklingError
+        from pickle import dump as pickle_dump
         try:
             with open(filename, 'wb') as cache_file:
                 pickle_dump(ordall(self._map), cache_file)
                 cache_file.close()
         except IOError:
-            print >> sys.stderr, 'warning: failed to write cache.'
+            sys.stderr.write('warning: failed to write cache.\n')
         except:
-            print >> sys.stderr, 'warning: unexpected error writing cache.'
+            sys.stderr.write('warning: unexpected error writing cache.\n')
 
     @classmethod
     def load(cls, filename=PICKLE_CACHE_PATH):
-        from cPickle import UnpicklingError
-        from cPickle import load as pickle_load
+        from pickle import UnpicklingError
+        from pickle import load as pickle_load
         try:
             with open(filename, 'rb') as cache_file:
                 map_ = unordall(pickle_load(cache_file))
                 return cls(map_)
         except UnpicklingError:
-            print >> sys.stderr, 'warning: failed to read cache file.'
+            sys.stderr.write('warning: failed to read cache file.\n')
             raise
         except IOError:
-            print >> sys.stderr, 'note: cache file not found.'
+            sys.stderr.write('note: cache file not found.\n')
             raise
         except:
-            print >> sys.stderr, 'warning: unexpected error loading cache.'
+            sys.stderr.write('warning: unexpected error loading cache.\n')
             raise
 
 class SqliteCache(Cache):
@@ -210,8 +213,8 @@ class SqliteCache(Cache):
 def get_cache(cls=SqliteCache):
     try:
         return cls.load()
-    except Exception, e:
-        print >> sys.stderr, 'Warning: %s load failed: %s' % (str(cls), str(e))
+    except Exception as e:
+        sys.stderr.write('Warning: %s load failed: %s\n' % (str(cls), str(e)))
         return cls()
 
 def tex_compile(fn):
@@ -235,7 +238,7 @@ def tex_compile(fn):
         # if an error message indicating nothing was output is
         # included.
         dvifn, no_output = "", False
-        for l in tex_out.split("\n"):
+        for l in tex_out.decode('utf-8').split("\n"):
             m = re.match(r'Output written on (\S+)', l)
             if m:
                 dvifn = m.group(1)
@@ -244,9 +247,9 @@ def tex_compile(fn):
 
         if no_output and not dvifn:
             #print >> sys.stderr, "rewritetex: failed to compile tex"
-            error_lines = [l for l in tex_out.split('\n') if 'Error' in l]
+            error_lines = [l for l in tex_out.decode('utf-8').split('\n') if 'Error' in l]
             if error_lines:
-                print >> sys.stderr, '\n'.join(error_lines)
+                sys.stderr.write( '\n'.join(error_lines))
             return None
 
         return dvifn
@@ -270,8 +273,8 @@ def run_catdvi(fn):
         catdvi.wait()
         catdvi_out, catdvi_err = catdvi.communicate()
         return catdvi_out
-    except IOError, e:
-        print >> sys.stderr, "rewritetex: failed to invoke catdvi:", e
+    except IOError as e:
+        sys.stderr.write( "rewritetex: failed to invoke catdvi:\n", e )
         return None
 
 def tex2str(tex):
@@ -303,14 +306,14 @@ def tex2str(tex):
     # create a temporary file for the tex content
     try:
         with NamedTemporaryFile('w', suffix='.tex') as tex_tmp:
-            tex_tmp.write(tex.encode(OUTPUT_ENCODING))
+            tex_tmp.write(tex)
             tex_tmp.flush()
 
             tex_out_fn = tex_compile(tex_tmp.name)
 
             if tex_out_fn is None:
                 # failed to compile
-                print >> sys.stderr, 'rewritetex: failed to compile tex document:\n"""\n%s\n"""' % tex.encode(OUTPUT_ENCODING)
+                sys.stderr.write( 'rewritetex: failed to compile tex document:\n"""\n%s\n"""' % tex )
                 return None
 
             # if no output file name could be found in tex output
@@ -325,10 +328,10 @@ def tex2str(tex):
             try:
                 dvistr = dvistr.decode(INPUT_ENCODING)
             except UnicodeDecodeError:
-                print >> sys.stderr, 'rewritetex: error decoding catdvi output as %s (adjust INPUT_ENCODING?)' % INPUT_ENCODING
+                sys.stderr.write('rewritetex: error decoding catdvi output as %s (adjust INPUT_ENCODING?)\n' % INPUT_ENCODING)
 
             if dvistr is None or dvistr == "":
-                print >> sys.stderr, 'rewritetex: likely error invoking catdvi (empty output)'
+                sys.stderr.write('rewritetex: likely error invoking catdvi (empty output)\n')
                 return None
 
             # perform minor whitespace cleanup
@@ -338,7 +341,7 @@ def tex2str(tex):
 
             return dvistr
     except IOError:
-        print >> sys.stderr, "rewritetex: failed to create temporary file"
+        sys.stderr.write( "rewritetex: failed to create temporary file\n" )
         raise
 
 def rewrite_tex_element(e, s):
@@ -431,10 +434,10 @@ def read_tree(filename):
     try:
         return ET.parse(filename)
     except ET.XMLSyntaxError:
-        print >> sys.stderr, "Error parsing %s" % fn
+        sys.stderr.write("Error parsing %s\n" % filename)
         raise
 
-def write_tree(tree, options=None):
+def write_tree(tree, fn, options=None):
     if options is not None and options.stdout:
         tree.write(sys.stdout, encoding=OUTPUT_ENCODING)
         return True
@@ -447,22 +450,22 @@ def write_tree(tree, options=None):
     output_fn = os.path.join(output_dir, os.path.basename(fn))
 
     # TODO: better checking to protect against clobbering.
-    if output_fn == fn and (not options or not options.overwrite):
-        print >> sys.stderr, 'rewritetex: skipping output for %s: file would overwrite input (consider -d and -o options)' % fn
-    else:
+    #if output_fn == fn and (not options or not options.overwrite):
+    #    print >> sys.stderr, 'rewritetex: skipping output for %s: file would overwrite input (consider -d and -o options)' % fn
+    #else:
         # OK to write output_fn
-        try:
-            with open(output_fn, 'w') as of:
-                tree.write(of, encoding=OUTPUT_ENCODING)
-        except IOError, ex:
-            print >> sys.stderr, 'rewritetex: failed write: %s' % ex
+    try:
+        with open(output_fn, 'w') as of:
+            tree.write(of, encoding=OUTPUT_ENCODING)
+    except IOError as ex:
+        sys.stderr.write('rewritetex: failed write: %s\n' % ex)
 
     return True
 
 def process(fn, cache=None, stats=None, options=None):
     tree = read_tree(fn)
     process_tree(tree)
-    write_tree(tree, options)
+    write_tree(tree, fn, options)
 
 def argparser():
     import argparse
@@ -485,7 +488,7 @@ def main(argv):
     cache.save()
 
     if options.verbose and not stats.zero():
-        print >> sys.stderr, 'rewritetex: %s' % str(stats)
+        sys.stderr.write( 'rewritetex: %s\n' % str(stats))
 
     return 0
 

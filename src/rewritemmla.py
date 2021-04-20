@@ -59,7 +59,7 @@ def read_tree(filename):
     try:
         return ET.parse(filename)
     except ET.XMLSyntaxError:
-        print >> sys.stderr, "Error parsing %s" % fn
+        sys.stderr.write("Error parsing %s\n" % filename)
         raise
 
 def process_tree(tree, options=None):
@@ -74,7 +74,7 @@ def process_tree(tree, options=None):
 
     return tree
 
-def write_tree(tree, options=None):
+def write_tree(tree, fn, options=None):
     if options is not None and options.stdout:
         tree.write(sys.stdout, encoding=OUTPUT_ENCODING)
         return True
@@ -88,22 +88,22 @@ def write_tree(tree, options=None):
 
     # TODO: better checking of path identify to protect against
     # clobbering.
-    if output_fn == fn and (not options or not options.overwrite):
-        print >> sys.stderr, 'rewritemmla: skipping output for %s: file would overwrite input (consider -d and -o options)' % fn
-    else:
+    #if output_fn == fn and (not options or not options.overwrite):
+    #    print >> sys.stderr, 'rewritemmla: skipping output for %s: file would overwrite input (consider -d and -o options)' % fn
+    #else:
         # OK to write output_fn
-        try:
-            with open(output_fn, 'w') as of:
-                tree.write(of, encoding=OUTPUT_ENCODING)
-        except IOError, ex:
-            print >> sys.stderr, 'rewritemmla: failed write: %s' % ex
-                
+    try:
+        with open(output_fn, 'w') as of:
+            tree.write(of, encoding=OUTPUT_ENCODING)
+    except IOError as ex:
+        sys.stderr.write('rewritemmla: failed write: %s\n' % ex)
+
     return True
 
 def process(fn, options=None):
     tree = read_tree(fn)
     process_tree(tree)
-    write_tree(tree, options)
+    write_tree(tree, fn, options)
 
 def argparser():
     import argparse

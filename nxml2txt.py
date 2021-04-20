@@ -61,16 +61,19 @@ def write_standoffs(standoffs, nxmlfn, argv=None):
 
 def main(argv):
     if len(argv) < 2 or len(argv) > 4:
-        print >> sys.stderr, 'Usage: %s' % usage
+        sys.stderr.write('Usage: %s\n' % usage)
         return 1
     nxmlfn = argv[1]
+
+    if os.path.exists(nxmlfn[:-5]+'.txt'):
+        return 0
 
     text, standoffs = nxml2txt(nxmlfn)
 
     write_text(text, nxmlfn, argv)
     write_standoffs(standoffs, nxmlfn, argv)
-    
+
     return 0
-    
+
 if __name__ == '__main__':
     sys.exit(main(sys.argv))

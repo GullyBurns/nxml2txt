@@ -3,6 +3,8 @@
 import sys
 import re
 import argparse
+import six
+import xml.etree.ElementTree as ET
 
 import lxml
 
@@ -60,7 +62,7 @@ class Standoff:
     def compress_text(self, l):
         if l != -1 and len(self.text) >= l:
             el = len(ELIDED_TEXT_STRING)
-            sl = (l-el)/2
+            sl = int((l-el)/2)
             self.text = (self.text[:sl]+ELIDED_TEXT_STRING+self.text[-(l-sl-el):])
     def __str__(self):
         # remove namespace specs from attribute names, if any
@@ -72,7 +74,7 @@ class Standoff:
                 an = a
             attrib[an] = self.element.attrib[a]
 
-        return "%s%d\t%s %d %d\t%s\t%s" % (self.prefix, self.sid, self.tag(), self.start, self.end, c_escape(self.text.encode("utf-8")), " ".join(['%s="%s"' % (k.encode("utf-8"),c_escape(v).encode("utf-8")) for k,v in attrib.items()]))
+        return "%s%d\t%s %d %d\t%s\t%s" % (self.prefix, self.sid, self.tag(), self.start, self.end, c_escape(self.text), " ".join(['%s="%s"' % (k,c_escape(v)) for k,v in attrib.items()]))
 
 def txt(s):
     return s if s is not None else ""
@@ -81,7 +83,7 @@ def is_standard_element(e):
     """Return whether given element is a normal element as opposed to a
     special like a comment, a processing instruction, or an entity."""
     try:
-        return isinstance(e.tag, basestring)
+        return isinstance(e.tag, six.string_types)
     except:
         return False
 
@@ -126,7 +128,7 @@ def read_tree(filename):
     try:
         return ET.parse(filename)
     except Exception:
-        print >> sys.stderr, "%s: Error parsing %s" % (argv[0], in_fn)
+        sys.stderr.write( "Error parsing %s\n" % (filename))
         raise
 
 def convert_tree(tree, options=None):
@@ -156,8 +158,8 @@ def write_text(text, filename):
     # TODO: be portable
     if filename == '-':
         filename = '/dev/stdout'
-    with open(filename, 'wt') as out:
-        out.write(text.encode('utf-8'))
+    with open(filename, 'w') as out:
+        out.write(text)
 
 def write_standoffs(standoffs, filename):
     # TODO: be portable
@@ -165,7 +167,7 @@ def write_standoffs(standoffs, filename):
         filename = '/dev/stdout'
     with open(filename, 'wt') as out:
         for so in standoffs:
-            print >> out, so
+            out.write(str(so)+'\n')
 
 def process(options):
     tree = read_tree(options.in_xml)

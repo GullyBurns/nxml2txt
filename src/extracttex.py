@@ -103,7 +103,7 @@ def process(fn, tex_set={}):
             exttex_cache_hits += 1
         else:
             exttex_cache_misses += 1
-            print compilable(tex)
+            print(compilable(tex))
             tex_set.add(tex_norm)
     return True
 
@@ -125,7 +125,7 @@ def main(argv):
         process(fn, tex_set)
 
     if options.verbose and any (value for value in (exttex_cache_hits, exttex_cache_misses) if value != 0):
-        print >> sys.stderr, 'extracttex: %d dup, %d unique' % (exttex_cache_hits, exttex_cache_misses)
+        sys.stderr.write('extracttex: %d dup, %d unique\n' % (exttex_cache_hits, exttex_cache_misses))
 
     return 0
 

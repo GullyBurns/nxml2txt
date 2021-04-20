@@ -58,7 +58,7 @@ def read_mapping(f, fn="mapping data"):
             continue
 
         m = linere.match(l)
-        assert m, "Format error in %s line %s: '%s'" % (fn, i+1, l.replace("\n","").encode("utf-8"))
+        assert m, "Format error in %s line %s: '%s'" % (fn, i+1, l.replace("\n",""))
         c, r = m.groups()
 
         c = wide_unichr(int(c, 16))
@@ -83,7 +83,7 @@ def wide_ord(char):
 
 def wide_unichr(i):
     try:
-        return unichr(i)
+        return chr(i)
     except ValueError:
         return (r'\U' + hex(i)[2:].zfill(8)).decode('unicode-escape')
 
@@ -188,9 +188,9 @@ def replace_mapped(e, mapping, missing, parent=None, options=None):
 
 def read_tree(filename):
     try:
-        return ET.parse(fn)
+        return ET.parse(filename)
     except ET.XMLSyntaxError:
-        print >> sys.stderr, "Error parsing %s" % fn
+        sys.stderr.write( "Error parsing %s\n" % filename)
         raise
 
 def write_tree(tree, options=None):
@@ -206,16 +206,16 @@ def write_tree(tree, options=None):
     output_fn = os.path.join(output_dir, os.path.basename(fn))
 
     # TODO: better protection against clobbering.
-    if output_fn == fn and not options.overwrite:
-        print >> sys.stderr, 'rewriteu2a: skipping output for %s: file would overwrite input (consider -d and -o options)' % fn
-    else:
+    #if output_fn == fn and not options.overwrite:
+    #    print >> sys.stderr, 'rewriteu2a: skipping output for %s: file would overwrite input (consider -d and -o options)' % fn
+    #else:
         # OK to write output_fn
-        try:
-            with open(output_fn, 'w') as of:
-                tree.write(of, encoding=OUTPUT_ENCODING)
-        except IOError, ex:
-            print >> sys.stderr, 'rewriteu2a: failed write: %s' % ex
-                
+    try:
+        with open(output_fn, 'w') as of:
+            tree.write(of, encoding=OUTPUT_ENCODING)
+    except IOError as ex:
+        sys.stderr.write('rewriteu2a: failed write: %s\n' % ex)
+
     return True
 
 def process_tree(tree, mapping=None, missing=None, options=None):
@@ -257,8 +257,8 @@ def load_mapping(mapfn=MAPPING_FILE_NAME):
     try:
         with codecs.open(mapfn, encoding="utf-8") as f:
             return read_mapping(f, mapfn)
-    except IOError, e:
-        print >> sys.stderr, "Error reading mapping from %s: %s" % (MAPPING_FILE_NAME, e)
+    except IOError as e:
+        sys.stderr.write("Error reading mapping from %s: %s\n" % (MAPPING_FILE_NAME, e))
         raise
 
 def write_missing(missing_mappings, filename=MISSING_MAPPING_FILE_NAME):
@@ -268,9 +268,9 @@ def write_missing(missing_mappings, filename=MISSING_MAPPING_FILE_NAME):
         try:
             with open(filename, 'a+') as mmf:
                 for mm in missing_mappings:
-                    print >> mmf, "%s\t%s" % (fn, mm)
-        except IOError, e:
-            print >> sys.stderr, "Warning: failed to write missing mappings to %s: %s" % (filename, e)
+                    sys.stderr.write("%s\t%s\n" % (filename, mm))
+        except IOError as e:
+            sys.stderr.write( "Warning: failed to write missing mappings to %s: %s\n" % (filename, e))
 
 def main(argv):
     options = argparser().parse_args(argv[1:])

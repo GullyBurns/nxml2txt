@@ -1,4 +1,4 @@
-import cPickle as pickle
+import pickle
 import argparse
 import codecs
 import glob
@@ -50,9 +50,12 @@ class Section:
                 S.set("charBeg",u"None")
                 S.set("charEnd",u"None")
             else:
-                S.set("charBeg",unicode(cB))
-                S.set("charEnd",unicode(cE))
-                
+                S.set("charBeg",cB)
+                S.set("charEnd",cE)
+#                S.set("charBeg",unicode(cB))
+#                S.set("charEnd",unicode(cE))
+
+
         for subS in self.subsections:
             E.append(subS.elem(actualSpanOffsets,inputTXT))
         return E
@@ -82,7 +85,7 @@ def interesting_spans(soFileName):
         line=line.strip()
         if not line:
             continue
-        line=unicode(line,"utf-8")
+        #line=unicode(line,"utf-8")
         line=line.split(u"\t")
         if len(line)==1:
             continue
@@ -278,7 +281,7 @@ def process_pair(textfile, sofile, textdir, secdir, options=None):
             ET.ElementTree(element).write(outsec, 'utf-8')
     except:
         traceback.print_exc()
-        print >> sys.stderr, "ERROR, SKIPPING:", textfile
+        sys.stderr.write( "ERROR, SKIPPING:", textfile )
         for fn in (outtext, outsec):
             try:
                 os.system("rm -f '%s'"% fn)
