@@ -1,1 +1,6 @@
 .history
+.idea/
+build/
+dist/
+nxml_2_txt.egg-info/
+
