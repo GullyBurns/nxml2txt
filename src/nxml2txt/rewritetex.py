@@ -46,9 +46,9 @@ CATDVI_COMMAND = 'catdvi -e 0 -s'
 
 # path to on-disk caches of tex document -> text mappings
 PICKLE_CACHE_PATH = os.path.join(os.path.dirname(__file__),
-                                 '../data/tex2txt.cache')
+                                 'data/tex2txt.cache')
 SQLITE_CACHE_PATH = os.path.join(os.path.dirname(__file__),
-                                 '../data/tex2txt.db')
+                                 'data/tex2txt.db')
 
 INPUT_ENCODING="UTF-8"
 OUTPUT_ENCODING="UTF-8"

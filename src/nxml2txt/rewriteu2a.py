@@ -22,7 +22,7 @@ from lxml import etree as ET
 # the replacement string.
 
 MAPPING_FILE_NAME = os.path.join(os.path.dirname(__file__),
-                                 '../data/entities.dat')
+                                 'data/entities.dat')
 
 # XML tag to use to mark text content rewritten by this script.
 REWRITTEN_TAG = 'n2t-u2a'
