@@ -4,16 +4,11 @@
 
 import os
 import sys
-import codecs
 
 from collections import namedtuple
 from lxml import etree as ET
 
-from src import rewritetex
-from src import rewritemmla
-from src import respace
-from src import rewriteu2a
-from src import standoff
+from src.nxml2txt import rewriteu2a, respace, rewritetex, standoff, rewritemmla
 
 usage='%s NXMLFILE [TEXTFILE] [SOFILE]' % __file__
 

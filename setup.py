@@ -8,7 +8,9 @@ data_files = [("data", [os.path.join(data_dir, "entities.dat")])]
 setup(
     name='nxml_2_txt',
     version='1.0.1',
-    packages=['src'],
+    packages=['nxml2txt'],
+    package_dir={'nxml2txt': 'src/nxml2txt'},
+    package_data={'nxml2txt': ['data/entities.dat']},
     url='https://github.com/GullyBurns/nxml2txt',
     license='MIT ',
     author='orig. Sampo Pyysalo; updated: Gully Burns',
