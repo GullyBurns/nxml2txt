@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name='nxml_2_txt',
     version='1.0.1',
-    packages=['src'],
+    packages=['src','data'],
     url='https://github.com/GullyBurns/nxml2txt',
     license='MIT ',
     author='orig. Sampo Pyysalo; updated: Gully Burns',
