@@ -255,7 +255,6 @@ def load_mapping(mapfn=MAPPING_FILE_NAME):
         mapfn = os.path.join(os.path.dirname(__file__),
                              os.path.basename(MAPPING_FILE_NAME))
     try:
-        print(mapfn)
         with codecs.open(mapfn, encoding="utf-8") as f:
             return read_mapping(f, mapfn)
     except IOError as e:
