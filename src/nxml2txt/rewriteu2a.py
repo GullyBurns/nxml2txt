@@ -250,10 +250,13 @@ def argparser():
     return ap
 
 def load_mapping(mapfn=MAPPING_FILE_NAME):
+    print(mapfn)
+    print(MAPPING_FILE_NAME)
     if not os.path.exists(mapfn):
         # fall back to trying in script dir
         mapfn = os.path.join(os.path.dirname(__file__),
                              os.path.basename(MAPPING_FILE_NAME))
+    print(mapfn)
     try:
         with codecs.open(mapfn, encoding="utf-8") as f:
             return read_mapping(f, mapfn)
