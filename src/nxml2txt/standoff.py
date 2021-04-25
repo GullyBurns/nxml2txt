@@ -100,8 +100,8 @@ def text_and_standoffs(e, curroff=0, standoffs=None):
     so = Standoff(next_free_so_id, e, 0, 0, "")
     next_free_so_id += 1
     standoffs.append(so)
-    setext, dummy = subelem_text_and_standoffs(e, curroff+len(txt(e.text.encode('unicode_escape'))), standoffs)
-    text = txt(e.text.encode('unicode_escape')) + setext
+    setext, dummy = subelem_text_and_standoffs(e, curroff+len(txt(e.text)), standoffs)
+    text = txt(e.text) + setext
     curroff += len(text)
     so.start = startoff
     so.end   = curroff
