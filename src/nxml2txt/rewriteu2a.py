@@ -119,7 +119,11 @@ def replace_mapped_text(e, mapping, missing, options=None):
             r.text = s
 
             # ... make it the first child of the current element
-            e.insert(0, r)
+            try:
+                e.insert(0, r)
+            except TypeError as typeErr:
+                print("Type Error: {0}".format(typeErr))
+                break
 
             # ... and split the text between the two
             r.tail = e.text[i+1:]
