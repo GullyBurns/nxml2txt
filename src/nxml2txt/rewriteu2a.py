@@ -21,21 +21,21 @@ from lxml import etree as ET
 # should contain the hex code for the unicode character, TAB, and
 # the replacement string.
 
-MAPPING_FILE_NAME = os.path.join(os.path.dirname(__file__),
-                                 'data/entities.dat')
+MAPPING_FILE_NAME = os.path.join(os.path.dirname(__file__), "data/entities.dat")
 
 # XML tag to use to mark text content rewritten by this script.
-REWRITTEN_TAG = 'n2t-u2a'
+REWRITTEN_TAG = "n2t-u2a"
 
 # XML attribute to use for storing the original for rewritten text.
-ORIG_TEXT_ATTRIBUTE = 'orig-text'
+ORIG_TEXT_ATTRIBUTE = "orig-text"
 
 # File into which to append unicode codepoints missing from the
 # mapping, if any
-MISSING_MAPPING_FILE_NAME = 'missing-mappings.txt'
+MISSING_MAPPING_FILE_NAME = "missing-mappings.txt"
 
-INPUT_ENCODING="UTF-8"
-OUTPUT_ENCODING="UTF-8"
+INPUT_ENCODING = "UTF-8"
+OUTPUT_ENCODING = "UTF-8"
+
 
 def read_mapping(f, fn="mapping data"):
     """
@@ -49,43 +49,53 @@ def read_mapping(f, fn="mapping data"):
     """
 
     # read in the replacement data
-    linere = re.compile(r'^([0-9A-Za-z]{4,})\t(.*)$')
+    linere = re.compile(r"^([0-9A-Za-z]{4,})\t(.*)$")
     mapping = {}
 
-    for i, l in enumerate(f):
+    for i, ll in enumerate(f):
         # ignore lines starting with "#" as comments
-        if len(l) != 0 and l[0] == "#":
+        if len(ll) != 0 and ll[0] == "#":
             continue
 
-        m = linere.match(l)
-        assert m, "Format error in %s line %s: '%s'" % (fn, i+1, l.replace("\n",""))
+        m = linere.match(ll)
+        assert m, "Format error in %s line %s: '%s'" % (fn, i + 1, ll.replace("\n", ""))
         c, r = m.groups()
 
         c = wide_unichr(int(c, 16))
-        assert c not in mapping or mapping[c] == r, "ERROR: conflicting mappings for %.4X: '%s' and '%s'" % (wide_ord(c), mapping[c], r)
+        assert c not in mapping or mapping[c] == r, (
+            "ERROR: conflicting mappings for %.4X: '%s' and '%s'"
+            % (wide_ord(c), mapping[c], r)
+        )
 
         # exception: literal '\n' maps to newline
-        if r == '\\n':
-            r = '\n'
+        if r == "\\n":
+            r = "\n"
 
         mapping[c] = r
 
     return mapping
 
+
 def wide_ord(char):
     try:
         return ord(char)
     except TypeError:
-        if len(char) == 2 and 0xD800 <= ord(char[0]) <= 0xDBFF and 0xDC00 <= ord(char[1]) <= 0xDFFF:
+        if (
+            len(char) == 2
+            and 0xD800 <= ord(char[0]) <= 0xDBFF
+            and 0xDC00 <= ord(char[1]) <= 0xDFFF
+        ):
             return (ord(char[0]) - 0xD800) * 0x400 + (ord(char[1]) - 0xDC00) + 0x10000
         else:
             raise
+
 
 def wide_unichr(i):
     try:
         return chr(i)
     except ValueError:
-        return (r'\U' + hex(i)[2:].zfill(8)).decode('unicode-escape')
+        return (r"\U" + hex(i)[2:].zfill(8)).decode("unicode-escape")
+
 
 def mapchar(c, mapping, missing_mappings, options=None):
     if c in mapping:
@@ -97,11 +107,12 @@ def mapchar(c, mapping, missing_mappings, options=None):
         # remove missing by default, keep unicode or output codepoint
         # as hex as an option
         if options is None or (not options.hex and not options.keep_missing):
-            return ''
+            return ""
         elif options.keep_missing:
             return c
         else:
             return "<%.4X>" % wide_ord(c)
+
 
 def replace_mapped_text(e, mapping, missing, options=None):
     # TODO: inefficient, improve
@@ -126,18 +137,20 @@ def replace_mapped_text(e, mapping, missing, options=None):
                 break
 
             # ... and split the text between the two
-            r.tail = e.text[i+1:]
+            r.tail = e.text[i + 1 :]
             e.text = e.text[:i]
 
             # terminate search; the rest of the text is now
             # in a different element
             break
 
+
 def parent_index(e, parent):
     for i, c in enumerate(parent):
         if c == e:
             return i
     return None
+
 
 def replace_mapped_tail(e, mapping, missing, parent, options=None):
     while True:
@@ -162,10 +175,10 @@ def replace_mapped_tail(e, mapping, missing, parent, options=None):
             # ... make it the next child of the parent after the
             # current
             pidx = parent_index(e, parent)
-            parent.insert(pidx+1, r)
+            parent.insert(pidx + 1, r)
 
             # ... and split the text between the two
-            r.tail = e.tail[i+1:]
+            r.tail = e.tail[i + 1 :]
             e.tail = e.tail[:i]
 
             # process the rest in the new element, avoiding tail
@@ -176,6 +189,7 @@ def replace_mapped_tail(e, mapping, missing, parent, options=None):
 
         if not replaced:
             break
+
 
 def replace_mapped(e, mapping, missing, parent=None, options=None):
     # process text content
@@ -190,14 +204,16 @@ def replace_mapped(e, mapping, missing, parent=None, options=None):
     if parent is not None and e.tail is not None and e.tail != "":
         replace_mapped_tail(e, mapping, missing, parent, options)
 
+
 def read_tree(filename):
     try:
         return ET.parse(filename)
     except ET.XMLSyntaxError:
-        sys.stderr.write( "Error parsing %s\n" % filename)
+        sys.stderr.write("Error parsing %s\n" % filename)
         raise
 
-def write_tree(tree, options=None):
+
+def write_tree(tree, fn, options=None):
     if options is not None and options.stdout:
         tree.write(sys.stdout, encoding=OUTPUT_ENCODING)
         return True
@@ -205,22 +221,23 @@ def write_tree(tree, options=None):
     if options is not None and options.directory is not None:
         output_dir = options.directory
     else:
-        output_dir = ''
+        output_dir = ""
 
     output_fn = os.path.join(output_dir, os.path.basename(fn))
 
     # TODO: better protection against clobbering.
-    #if output_fn == fn and not options.overwrite:
+    # if output_fn == fn and not options.overwrite:
     #    print >> sys.stderr, 'rewriteu2a: skipping output for %s: file would overwrite input (consider -d and -o options)' % fn
-    #else:
-        # OK to write output_fn
+    # else:
+    # OK to write output_fn
     try:
-        with open(output_fn, 'w') as of:
+        with open(output_fn, "w") as of:
             tree.write(of, encoding=OUTPUT_ENCODING)
     except IOError as ex:
-        sys.stderr.write('rewriteu2a: failed write: %s\n' % ex)
+        sys.stderr.write("rewriteu2a: failed write: %s\n" % ex)
 
     return True
+
 
 def process_tree(tree, mapping=None, missing=None, options=None):
     if mapping is None:
@@ -232,32 +249,56 @@ def process_tree(tree, mapping=None, missing=None, options=None):
     replace_mapped(root, mapping, missing, options=options)
     return tree
 
+
 def process(fn, mapping, missing, options):
     tree = read_tree(fn)
     process_tree(tree)
-    write_tree(tree, options)
+    write_tree(tree, fn, options)
+
 
 def argparser():
     import argparse
-    ap=argparse.ArgumentParser(description='Rewrite Unicode text content with approximately equivalent ASCII in PMC NXML files.')
-    ap.add_argument('-d', '--directory', default=None, metavar='DIR',
-                    help='output directory')
-    ap.add_argument('-o', '--overwrite', default=False, action='store_true',
-                    help='allow output to overwrite input files')
-    ap.add_argument('-s', '--stdout', default=False, action='store_true',
-                    help='output to stdout')
-    ap.add_argument('-x', '--hex', default=False, action='store_true',
-                    help='write hex sequence for missing mappings')
-    ap.add_argument('-k', '--keep-missing', default=False, action='store_true',
-                    help='keep unicode for missing mappings')
-    ap.add_argument('file', nargs='+', help='input PubMed Central NXML file')
+
+    ap = argparse.ArgumentParser(
+        description="Rewrite Unicode text content with approximately equivalent ASCII in PMC NXML files."
+    )
+    ap.add_argument(
+        "-d", "--directory", default=None, metavar="DIR", help="output directory"
+    )
+    ap.add_argument(
+        "-o",
+        "--overwrite",
+        default=False,
+        action="store_true",
+        help="allow output to overwrite input files",
+    )
+    ap.add_argument(
+        "-s", "--stdout", default=False, action="store_true", help="output to stdout"
+    )
+    ap.add_argument(
+        "-x",
+        "--hex",
+        default=False,
+        action="store_true",
+        help="write hex sequence for missing mappings",
+    )
+    ap.add_argument(
+        "-k",
+        "--keep-missing",
+        default=False,
+        action="store_true",
+        help="keep unicode for missing mappings",
+    )
+    ap.add_argument("file", nargs="+", help="input PubMed Central NXML file")
     return ap
+
 
 def load_mapping(mapfn=MAPPING_FILE_NAME):
     if not os.path.exists(mapfn):
         # fall back to trying in script dir
-        mapfn = os.path.join(os.path.dirname(__file__),
-                             os.path.basename(MAPPING_FILE_NAME))
+        mapfn = os.path.join(
+            os.path.dirname(__file__), os.path.basename(MAPPING_FILE_NAME)
+        )
     try:
         with codecs.open(mapfn, encoding="utf-8") as f:
             return read_mapping(f, mapfn)
@@ -265,16 +306,19 @@ def load_mapping(mapfn=MAPPING_FILE_NAME):
         sys.stderr.write("Error reading mapping from %s: %s\n" % (MAPPING_FILE_NAME, e))
         raise
 
+
 def write_missing(missing_mappings, filename=MISSING_MAPPING_FILE_NAME):
     # if there were any missing mappings and an output file name is
     # defined for these, try to append them in that file.
     if len(missing_mappings) > 0 and filename is not None:
         try:
-            with open(filename, 'a+') as mmf:
-                for mm in missing_mappings:
-                    sys.stderr.write("%s\t%s\n" % (filename, mm))
+            for mm in missing_mappings:
+                sys.stderr.write("%s\t%s\n" % (filename, mm))
         except IOError as e:
-            sys.stderr.write( "Warning: failed to write missing mappings to %s: %s\n" % (filename, e))
+            sys.stderr.write(
+                "Warning: failed to write missing mappings to %s: %s\n" % (filename, e)
+            )
+
 
 def main(argv):
     options = argparser().parse_args(argv[1:])
@@ -288,6 +332,7 @@ def main(argv):
     write_missing(missing)
 
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))
