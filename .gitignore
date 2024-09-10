@@ -5,3 +5,7 @@ dist/
 nxml_2_txt.egg-info/
 src/__pycache__
 src/nxml2txt/data/tex2txt.db
+.DS_Store
+test/*.tsv
+.vscode
+__pycache__

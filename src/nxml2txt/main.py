@@ -8,13 +8,16 @@ import sys
 from collections import namedtuple
 from lxml import etree as ET
 
-from nxml2txt import rewriteu2a, respace, rewritetex, standoff, rewritemmla
+import rewriteu2a
+import respace
+import rewritetex
+import standoff
+import rewritemmla
 
 usage = "%s NXMLFILE [TEXTFILE] [SOFILE]" % __file__
 
 TexOptions = namedtuple("TexOptions", "verbose")
 U2aOptions = namedtuple("U2aOptions", "hex keep_missing stdout directory overwrite")
-
 
 def nxml2txt(nxmlfn, tex_options=None, u2a_options=None):
     tree = ET.parse(nxmlfn)
