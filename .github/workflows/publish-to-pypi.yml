@@ -5,7 +5,7 @@ on: push
 jobs:
   build:
     name: Build distribution 1 📦
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v4
@@ -14,7 +14,6 @@ jobs:
       with:
         python-version: "3.x"
         # Optional - x64 or x86 architecture, defaults to x64
-        architecture: 'x64'
     - name: Install pypa/build
       run: >-
         python3 -m
