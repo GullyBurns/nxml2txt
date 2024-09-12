@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nxml2txt"
-version = "0.1.5"
+version = "0.1.6"
 description = "XML formatted full-text articles to text format conversion. Standoff annotations for text and entities. Originally written by Sampo Pyysalo: https://github.com/spyysalo/nxml2txt"
 authors = ["Gully Burns <gully.burns@chanzuckerberg.com>"]
 license = "MIT"
@@ -8,7 +8,7 @@ readme = "README.md"
 packages = [{include = "nxml2txt", from="src"}]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.6"
 lxml = "^5.2.2"
 pandas = "^2.1.4"
 beautifulsoup4 = "^4.12.3"
